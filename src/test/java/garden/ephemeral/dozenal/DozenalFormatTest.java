@@ -1,72 +1,99 @@
 package garden.ephemeral.dozenal;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class DozenalFormatTest {
 
-    @Test
-    void formatLong() {
+    @ParameterizedTest
+    @MethodSource("longExamples")
+    void formatLong(String expected, long input) {
         DozenalFormat format = new DozenalFormat();
-        assertEquals("0", format.format(0));
-        assertEquals("3", format.format(3));
-        assertEquals("36", format.format(42));
-        assertEquals("100", format.format(144));
-        assertEquals("1,000", format.format(1728));
-        assertEquals("1,000,000", format.format(2985984));
+        assertEquals(expected, format.format(input));
     }
 
-    @Test
-    void formatDouble() {
+    @ParameterizedTest
+    @MethodSource({"longExamples", "longParseExamples"})
+    void parseLong(String input, long expected) throws Exception {
+        DozenalFormat format = new DozenalFormat();
+        assertEquals(expected, format.parse(input));
+    }
+
+    static Stream<Arguments> longExamples() {
+        return Stream.of(
+                arguments("0", 0L),
+                arguments("1", 1L),
+                arguments("2", 2L),
+                arguments("3", 3L),
+                arguments("4", 4L),
+                arguments("5", 5L),
+                arguments("6", 6L),
+                arguments("7", 7L),
+                arguments("8", 8L),
+                arguments("9", 9L),
+                arguments("↊", 10L),
+                arguments("↋", 11L),
+                arguments("10", 12L),
+
+                arguments("-3", -3L),
+
+                arguments("36", 42L),
+                arguments("100", 144L),
+                arguments("1,000", 1728L),
+                arguments("1,000,000", 2985984L)
+        );
+    }
+
+    static Stream<Arguments> longParseExamples() {
+        return Stream.of(
+                arguments("1000", 1728L),
+                arguments("1000000", 2985984L)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("doubleExamples")
+    void formatDouble(String expected, double input) {
         DozenalFormat format = new DozenalFormat();
         format.setMinimumFractionDigits(1);
         format.setMaximumFractionDigits(3);
-        assertEquals("0;001", format.format(1.0/1728));
-        assertEquals("0;01", format.format(1.0/144));
-        assertEquals("0;1", format.format(1.0/12));
-        assertEquals("1;0", format.format(1.0));
-        assertEquals("10;0", format.format(12.0));
-        assertEquals("100;0", format.format(144.0));
+        assertEquals(expected, format.format(input));
     }
 
-    @Test
-    void formatDoublePercent() {
+    static Stream<Arguments> doubleExamples() {
+        return Stream.of(
+                arguments("0;001", 1.0/1728),
+                arguments("0;01", 1.0/144),
+                arguments("0;1", 1.0/12),
+                arguments("1;0", 1.0),
+                arguments("10;0", 12.0),
+                arguments("100;0", 144.0)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("formatDoublePercentExamples")
+    void formatDoublePercent(double input, String expected) {
         DozenalFormat format = new DozenalFormat();
         format.setMinimumFractionDigits(1);
         format.setMaximumFractionDigits(3);
         format.setMultiplier(144);
         format.setPositiveSuffix("%");
         format.setNegativeSuffix("%");
-        assertEquals("100;0%", format.format(1.0));
-        assertEquals("1;0%", format.format(1.0/144));
+        assertEquals(expected, format.format(input));
     }
 
-    @Test
-    void parse() throws Exception {
-        DozenalFormat format = new DozenalFormat();
-
-        assertEquals(0L, format.parse("0"));
-        assertEquals(1L, format.parse("1"));
-        assertEquals(2L, format.parse("2"));
-        assertEquals(3L, format.parse("3"));
-        assertEquals(4L, format.parse("4"));
-        assertEquals(5L, format.parse("5"));
-        assertEquals(6L, format.parse("6"));
-        assertEquals(7L, format.parse("7"));
-        assertEquals(8L, format.parse("8"));
-        assertEquals(9L, format.parse("9"));
-        assertEquals(10L, format.parse("↊"));
-        assertEquals(11L, format.parse("↋"));
-        assertEquals(12L, format.parse("10"));
-
-        assertEquals(-3L, format.parse("-3"));
-
-        assertEquals(42L, format.parse("36"));
-        assertEquals(144L, format.parse("100"));
-        assertEquals(1728L, format.parse("1000"));
-        assertEquals(1728L, format.parse("1,000"));
-        assertEquals(2985984L, format.parse("1000000"));
-        assertEquals(2985984L, format.parse("1,000,000"));
+    static Stream<Arguments> formatDoublePercentExamples() {
+        return Stream.of(
+                arguments(0.0, "0;0%"),
+                arguments(1.0, "100;0%"),
+                arguments(1.0/144, "1;0%")
+        );
     }
 }
