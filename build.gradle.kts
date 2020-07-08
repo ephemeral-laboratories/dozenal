@@ -3,7 +3,7 @@ plugins {
     `maven-publish`
 }
 
-group = "org.example"
+group = "garden.ephemeral.dozenal"
 version = "1.0-SNAPSHOT"
 
 java {
