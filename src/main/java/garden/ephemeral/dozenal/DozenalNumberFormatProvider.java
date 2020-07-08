@@ -7,7 +7,7 @@ import java.util.Currency;
 import java.util.Locale;
 
 public class DozenalNumberFormatProvider extends NumberFormatProvider {
-    private static final Locale CLOCK_TOWER = new Locale("en", "XX");
+    private static final Locale CLOCK_TOWER = new Locale("en", "US", "DOZ");
 
     private static final int NUMBER_STYLE = 0;
     private static final int CURRENCY_STYLE = 1;

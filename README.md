@@ -7,13 +7,16 @@ Very preliminary dozenal locale implementation for Java.
 Usage
 -----
 
-Put the jar somewhere in `java.ext.dirs`.
+Put the jar somewhere in `java.ext.dirs` or on the boot classpath
+via `-Xbootclasspath/a:`.
 
-Run Java with additional system properties:
+Then, run Java with additional system properties to set the locale:
 
 ```
--Duser.country=XX
+-Duser.language=en
+-Duser.country=US
+-Duser.variant=DOZ
 -Djava.locale.providers=SPI,JRE
 ```
 
-More appropriate settings pending.
+Other variations might work too. Research is ongoing.
