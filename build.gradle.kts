@@ -3,6 +3,8 @@ plugins {
     `maven-publish`
 }
 
+group = "garden.ephemeral.dozenal"
+
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
 }
