@@ -65,6 +65,7 @@ public class DozenalNumberFormatProvider extends NumberFormatProvider {
                     break;
 
                 case PERCENT_STYLE:
+                    format.setMultiplier(144);
                     format.setMaximumFractionDigits(1);
                     format.setPositiveSuffix("%");
                     format.setNegativeSuffix("%");
