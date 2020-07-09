@@ -15,6 +15,7 @@ public class Dozenal {
 
     public static final char DIGIT_ZERO = '0';
     public static final char DIGIT_ONE = '1';
+    public static final char DIGIT_HALF = '6';
     public static final char DIGIT_PENULTIMATE = '↋';
 
     public static final String DIGITS = "0123456789↊↋";

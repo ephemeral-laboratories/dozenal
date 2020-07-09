@@ -1,10 +1,10 @@
 package garden.ephemeral.dozenal;
 
+import garden.ephemeral.dozenal.internal.FloatingDozenal;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-
-import garden.ephemeral.dozenal.internal.FloatingDozenal;
 
 /**
  * Digit List. Private to DecimalFormat.
@@ -379,9 +379,13 @@ final class DigitList implements Cloneable {
                         break;
                     }
 
-                    ++digits[maximumDigits];
-                    if (digits[maximumDigits] <= '9') break;
-                    // digits[maximumDigits] = '0'; // Unnecessary since we'll truncate this
+                    if (digits[maximumDigits] == Dozenal.DIGIT_PENULTIMATE) {
+                        // digits[maximumDigits] = '0'; // Unnecessary since we'll truncate this
+                        continue;
+                    }
+
+                    digits[maximumDigits] = Dozenal.nextDigitAfter(digits[maximumDigits]);
+                    break;
                 }
                 ++maximumDigits; // Increment for use as count
             }
@@ -489,11 +493,11 @@ final class DigitList implements Cloneable {
                     break;
                 case HALF_UP:
                 case HALF_DOWN:
-                    if (digits[maximumDigits] > '5') {
+                    if (digits[maximumDigits] > Dozenal.DIGIT_HALF) {
                         // Value is above tie ==> must round up
                         return true;
-                    } else if (digits[maximumDigits] == '5') {
-                        // Digit at rounding position is a '5'. Tie cases.
+                    } else if (digits[maximumDigits] == Dozenal.DIGIT_HALF) {
+                        // Digit at rounding position is a 'half'. Tie cases.
                         if (maximumDigits != (count - 1)) {
                             // There are remaining digits. Above tie => must round up
                             return true;
@@ -511,14 +515,14 @@ final class DigitList implements Cloneable {
                             }
                         }
                     }
-                    // Digit at rounding position is < '5' ==> no round up.
+                    // Digit at rounding position is < 'half' ==> no round up.
                     // Just let do the default, which is no round up (thus break).
                     break;
                 case HALF_EVEN:
                     // Implement IEEE half-even rounding
-                    if (digits[maximumDigits] > '5') {
+                    if (digits[maximumDigits] > Dozenal.DIGIT_HALF) {
                         return true;
-                    } else if (digits[maximumDigits] == '5' ) {
+                    } else if (digits[maximumDigits] == Dozenal.DIGIT_HALF) {
                         if (maximumDigits == (count - 1)) {
                             // the rounding position is exactly the last index :
                             if (alreadyRounded)
@@ -539,7 +543,7 @@ final class DigitList implements Cloneable {
                                         (digits[maximumDigits-1] % 2 != 0));
                             }
                         } else {
-                            // Rounds up if it gives a non null digit after '5'
+                            // Rounds up if it gives a non null digit after 'half'
                             for (int i=maximumDigits+1; i<count; ++i) {
                                 if (digits[i] != '0')
                                     return true;

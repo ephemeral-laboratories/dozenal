@@ -1,27 +1,31 @@
 package garden.ephemeral.dozenal;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class DozenalFormatTest {
+    private static final Locale locale = new Locale("en", "US", "DOZ");
 
     @ParameterizedTest
     @MethodSource("longExamples")
     void formatLong(String expected, long input) {
-        DozenalFormat format = new DozenalFormat();
+        NumberFormat format = new DozenalNumberFormatProvider().getIntegerInstance(locale);
         assertEquals(expected, format.format(input));
     }
 
     @ParameterizedTest
     @MethodSource({"longExamples", "longParseExamples"})
     void parseLong(String input, long expected) throws Exception {
-        DozenalFormat format = new DozenalFormat();
+        NumberFormat format = new DozenalNumberFormatProvider().getIntegerInstance(locale);
         assertEquals(expected, format.parse(input));
     }
 
@@ -60,7 +64,7 @@ public class DozenalFormatTest {
     @ParameterizedTest
     @MethodSource("doubleExamples")
     void formatDouble(String expected, double input) {
-        DozenalFormat format = new DozenalFormat();
+        NumberFormat format = new DozenalNumberFormatProvider().getNumberInstance(locale);
         format.setMinimumFractionDigits(1);
         format.setMaximumFractionDigits(3);
         assertEquals(expected, format.format(input));
@@ -77,23 +81,28 @@ public class DozenalFormatTest {
         );
     }
 
+    @Test
+    void formatDoubleRounding() {
+        NumberFormat format = new DozenalNumberFormatProvider().getNumberInstance(locale);
+        format.setMaximumFractionDigits(1);
+        assertEquals("0;↊", format.format(0.8));
+    }
+
     @ParameterizedTest
     @MethodSource("formatDoublePercentExamples")
     void formatDoublePercent(double input, String expected) {
-        DozenalFormat format = new DozenalFormat();
-        format.setMinimumFractionDigits(1);
-        format.setMaximumFractionDigits(3);
-        format.setMultiplier(144);
-        format.setPositiveSuffix("%");
-        format.setNegativeSuffix("%");
+        NumberFormat format = new DozenalNumberFormatProvider().getPercentInstance(locale);
         assertEquals(expected, format.format(input));
     }
 
     static Stream<Arguments> formatDoublePercentExamples() {
         return Stream.of(
-                arguments(0.0, "0;0%"),
-                arguments(1.0, "100;0%"),
-                arguments(1.0/144, "1;0%")
+                arguments(0.0, "0%"),
+                arguments(0.83, "9↋;6%"),
+                arguments(0.84, "↊1%"),
+                arguments(0.85, "↊2;5%"),
+                arguments(1.0, "100%"),
+                arguments(1.0/144, "1%")
         );
     }
 }
