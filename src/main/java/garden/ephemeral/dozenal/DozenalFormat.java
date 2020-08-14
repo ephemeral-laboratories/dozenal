@@ -1593,9 +1593,8 @@ public class DozenalFormat extends NumberFormat {
         //  }
 
         char zero = symbols.getZeroDigit();
-        int zeroDelta = zero - '0'; // '0' is the DigitList representation of zero
         char grouping = symbols.getGroupingSeparator();
-        char decimal = isCurrencyFormat ?
+        char fractionalSeparator = isCurrencyFormat ?
                 symbols.getMonetaryDecimalSeparator() :
                 symbols.getDecimalSeparator();
 
@@ -1681,14 +1680,14 @@ public class DozenalFormat extends NumberFormat {
                     // Record field information for caller.
                     iFieldEnd = result.length();
 
-                    result.append(decimal);
+                    result.append(fractionalSeparator);
                     addedDecimalSeparator = true;
 
                     // Record field information for caller.
                     fFieldStart = result.length();
                 }
                 result.append((i < digitList.count) ?
-                        (char)(digitList.digits[i] + zeroDelta) :
+                        Dozenal.getDigit(digitList.digits[i]) :
                         zero);
             }
 
@@ -1696,7 +1695,7 @@ public class DozenalFormat extends NumberFormat {
                 // Record field information for caller.
                 iFieldEnd = result.length();
 
-                result.append(decimal);
+                result.append(fractionalSeparator);
                 addedDecimalSeparator = true;
 
                 // Record field information for caller.
@@ -1749,7 +1748,7 @@ public class DozenalFormat extends NumberFormat {
             }
             for (int i=0; i<digitList.decimalAt; ++i) {
                 result.append((i < digitList.count) ?
-                        (char)(digitList.digits[i] + zeroDelta) : zero);
+                        Dozenal.getDigit(digitList.digits[i]) : zero);
             }
             formatted(fieldPosition, Field.EXPONENT, eFieldStart, result.length());
         } else {
@@ -1775,10 +1774,11 @@ public class DozenalFormat extends NumberFormat {
             }
 
             int sizeBeforeIntegerPart = result.length();
-            for (int i=count-1; i>=0; --i) {
+            for (int i = count - 1; i >= 0; i--) {
                 if (i < digitList.decimalAt && digitIndex < digitList.count) {
                     // Output a real digit
-                    result.append((char)(digitList.digits[digitIndex++] + zeroDelta));
+                    result.append(Dozenal.getDigit(digitList.digits[digitIndex]));
+                    digitIndex++;
                 } else {
                     // Output a leading zero
                     result.append(zero);
@@ -1787,8 +1787,7 @@ public class DozenalFormat extends NumberFormat {
                 // Output grouping separator if necessary.  Don't output a
                 // grouping separator if i==0 though; that's at the end of
                 // the integer part.
-                if (isGroupingUsed() && i>0 && (groupingSize != 0) &&
-                        (i % groupingSize == 0)) {
+                if (isGroupingUsed() && i > 0 && (groupingSize != 0) && (i % groupingSize == 0)) {
                     int gStart = result.length();
                     result.append(grouping);
                     formatted(fieldPosition, Field.GROUPING_SEPARATOR, gStart, result.length());
@@ -1812,7 +1811,7 @@ public class DozenalFormat extends NumberFormat {
             // Output the decimal separator if we always do so.
             int sStart = result.length();
             if (decimalSeparatorAlwaysShown || fractionPresent) {
-                result.append(decimal);
+                result.append(fractionalSeparator);
             }
 
             if (sStart != result.length()) {
@@ -1820,7 +1819,7 @@ public class DozenalFormat extends NumberFormat {
             }
             int fFieldStart = result.length();
 
-            for (int i=0; i < maxFraDigits; ++i) {
+            for (int i = 0; i < maxFraDigits; i++) {
                 // Here is where we escape from the loop.  We escape if we've
                 // output the maximum fraction digits (specified in the for
                 // expression above).
@@ -1835,7 +1834,7 @@ public class DozenalFormat extends NumberFormat {
                 // Output leading fractional zeros. These are zeros that come
                 // after the decimal but before any significant digits. These
                 // are only output if abs(number being formatted) < 1.0.
-                if (-1-i > (digitList.decimalAt-1)) {
+                if (-1 - i > (digitList.decimalAt - 1)) {
                     result.append(zero);
                     continue;
                 }
@@ -1843,7 +1842,8 @@ public class DozenalFormat extends NumberFormat {
                 // Output a digit, if we have any precision left, or a
                 // zero if we don't.  We don't want to output noise digits.
                 if (!isInteger && digitIndex < digitList.count) {
-                    result.append((char)(digitList.digits[digitIndex++] + zeroDelta));
+                    result.append(Dozenal.getDigit(digitList.digits[digitIndex]));
+                    digitIndex++;
                 } else {
                     result.append(zero);
                 }
@@ -1954,7 +1954,7 @@ public class DozenalFormat extends NumberFormat {
         // special case NaN
         if (text.regionMatches(pos.getIndex(), symbols.getNaN(), 0, symbols.getNaN().length())) {
             pos.setIndex(pos.getIndex() + symbols.getNaN().length());
-            return Double.valueOf(Double.NaN);
+            return Double.NaN;
         }
 
         boolean[] status = new boolean[STATUS_LENGTH];
@@ -1965,19 +1965,19 @@ public class DozenalFormat extends NumberFormat {
         // special case INFINITY
         if (status[STATUS_INFINITE]) {
             if (status[STATUS_POSITIVE] == (multiplier >= 0)) {
-                return Double.valueOf(Double.POSITIVE_INFINITY);
+                return Double.POSITIVE_INFINITY;
             } else {
-                return Double.valueOf(Double.NEGATIVE_INFINITY);
+                return Double.NEGATIVE_INFINITY;
             }
         }
 
         if (multiplier == 0) {
             if (digitList.isZero()) {
-                return Double.valueOf(Double.NaN);
+                return Double.NaN;
             } else if (status[STATUS_POSITIVE]) {
-                return Double.valueOf(Double.POSITIVE_INFINITY);
+                return Double.POSITIVE_INFINITY;
             } else {
-                return Double.valueOf(Double.NEGATIVE_INFINITY);
+                return Double.NEGATIVE_INFINITY;
             }
         }
 
@@ -2046,13 +2046,15 @@ public class DozenalFormat extends NumberFormat {
             // (bug 4162852).
             if (multiplier != 1 && gotDouble) {
                 longResult = (long)doubleResult;
+                //noinspection divzero
                 gotDouble = ((doubleResult != (double)longResult) ||
-                        (doubleResult == 0.0 && 1/doubleResult < 0.0)) &&
+                        (doubleResult == 0.0 && 1 / doubleResult < 0.0)) &&
                         !isParseIntegerOnly();
             }
 
             // cast inside of ?: because of binary numeric promotion, JLS 15.25
-            return gotDouble ? (Number)doubleResult : (Number)longResult;
+            //noinspection RedundantCast
+            return gotDouble ? (Number) doubleResult : (Number) longResult;
         }
     }
 
@@ -2139,10 +2141,10 @@ public class DozenalFormat extends NumberFormat {
 
             digits.decimalAt = digits.count = 0;
             char zero = symbols.getZeroDigit();
-            char decimal = isCurrencyFormat ? symbols.getMonetaryDecimalSeparator() : symbols.getDecimalSeparator();
+            char fractionalSeparator = isCurrencyFormat ? symbols.getMonetaryDecimalSeparator() : symbols.getDecimalSeparator();
             char grouping = symbols.getGroupingSeparator();
             String exponentString = symbols.getExponentSeparator();
-            boolean sawDecimal = false;
+            boolean sawFraction = false;
             boolean sawExponent = false;
             boolean sawDigit = false;
             int exponent = 0; // Set to the exponent value, if any
@@ -2165,7 +2167,7 @@ public class DozenalFormat extends NumberFormat {
                     // Handle leading zeros
                     if (digits.count == 0) {
                         // Ignore leading zeros in integer part of number.
-                        if (!sawDecimal) {
+                        if (!sawFraction) {
                             continue;
                         }
 
@@ -2176,25 +2178,25 @@ public class DozenalFormat extends NumberFormat {
                         --digits.decimalAt;
                     } else {
                         ++digitCount;
-                        digits.append(Dozenal.getDigit(digit));
+                        digits.append(digit);
                     }
                 } else if (digit > 0 && digit <= Dozenal.PENULTIMATE) { // [sic] digit==0 handled above
                     sawDigit = true;
-                    ++digitCount;
-                    digits.append(Dozenal.getDigit(digit));
+                    digitCount++;
+                    digits.append(digit);
 
                     // Cancel out backup setting (see grouping handler below)
                     backup = -1;
-                } else if (!isExponent && ch == decimal) {
+                } else if (!isExponent && ch == fractionalSeparator) {
                     // If we're only parsing integers, or if we ALREADY saw the
                     // decimal, then don't parse this one.
-                    if (isParseIntegerOnly() || sawDecimal) {
+                    if (isParseIntegerOnly() || sawFraction) {
                         break;
                     }
                     digits.decimalAt = digitCount; // Not digits.count!
-                    sawDecimal = true;
+                    sawFraction = true;
                 } else if (!isExponent && ch == grouping && isGroupingUsed()) {
-                    if (sawDecimal) {
+                    if (sawFraction) {
                         break;
                     }
                     // Ignore grouping characters, if we are using them, but
@@ -2228,7 +2230,7 @@ public class DozenalFormat extends NumberFormat {
             }
 
             // If there was no decimal point we have an integer
-            if (!sawDecimal) {
+            if (!sawFraction) {
                 digits.decimalAt = digitCount; // Not digits.count!
             }
 
@@ -4050,7 +4052,7 @@ public class DozenalFormat extends NumberFormat {
     // ------ Fast-Path for double Constants ------
 
     /** Maximum valid integer value for applying fast-path algorithm */
-    private static final double MAX_INT_AS_DOUBLE = (double) Integer.MAX_VALUE;
+    private static final double MAX_INT_AS_DOUBLE = Integer.MAX_VALUE;
 
     /**
      * The digit arrays used in the fast-path methods for collecting digits.

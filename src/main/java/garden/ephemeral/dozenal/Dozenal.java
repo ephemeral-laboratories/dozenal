@@ -2,6 +2,7 @@ package garden.ephemeral.dozenal;
 
 public class Dozenal {
     public static final int RADIX = 12;
+    public static final int HALF_RADIX = 6;
     public static final int PENULTIMATE = RADIX - 1;
 
     public static final int RADIX_SQUARED = RADIX * RADIX;

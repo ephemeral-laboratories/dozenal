@@ -156,7 +156,7 @@ public class FloatingDozenal {
          *
          * @return <code>true</code> if any only if the conversion was exact.
          */
-        public boolean decimalDigitsExact();
+        public boolean dozenalDigitsExact();
     }
 
     /**
@@ -214,7 +214,7 @@ public class FloatingDozenal {
         }
 
         @Override
-        public boolean decimalDigitsExact() {
+        public boolean dozenalDigitsExact() {
             throw new IllegalArgumentException("Exceptional value is not exact");
         }
     }
@@ -318,7 +318,7 @@ public class FloatingDozenal {
         }
 
         @Override
-        public boolean decimalDigitsExact() {
+        public boolean dozenalDigitsExact() {
             return exactDecimalConversion;
         }
 

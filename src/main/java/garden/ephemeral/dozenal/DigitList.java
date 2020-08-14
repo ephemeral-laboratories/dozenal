@@ -5,6 +5,8 @@ import garden.ephemeral.dozenal.internal.FloatingDozenal;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Digit List. Private to DecimalFormat.
@@ -43,6 +45,11 @@ final class DigitList implements Cloneable {
     public static final int MAX_COUNT = 19; // == Long.toString(Long.MAX_VALUE).length()
 
     /**
+     * {@link Long#MIN_VALUE} formatted in base 12 sans minus sign.
+     */
+    private static final int[] LONG_MIN_REP = {4, 1, 10, 7, 9, 2, 6, 7, 8, 5, 1, 5, 1, 2, 0, 3, 6, 8};
+
+    /**
      * These data members are intentionally public and can be set directly.
      *
      * The value represented is given by placing the decimal point before
@@ -65,7 +72,7 @@ final class DigitList implements Cloneable {
      */
     public int decimalAt = 0;
     public int count = 0;
-    public char[] digits = new char[MAX_COUNT];
+    public int[] digits = new int[MAX_COUNT];
 
     private char[] data;
     private RoundingMode roundingMode = RoundingMode.HALF_EVEN;
@@ -76,7 +83,7 @@ final class DigitList implements Cloneable {
      */
     boolean isZero() {
         for (int i=0; i < count; ++i) {
-            if (digits[i] != '0') {
+            if (digits[i] != 0) {
                 return false;
             }
         }
@@ -105,11 +112,11 @@ final class DigitList implements Cloneable {
     /**
      * Appends a digit to the list, extending the list when necessary.
      */
-    public void append(char digit) {
+    public void append(int digit) {
         if (count == digits.length) {
-            char[] data = new char[count + 100];
-            System.arraycopy(digits, 0, data, 0, count);
-            digits = data;
+            int[] newArray = new int[count + 100];
+            System.arraycopy(digits, 0, newArray, 0, count);
+            digits = newArray;
         }
         digits[count++] = digit;
     }
@@ -124,12 +131,15 @@ final class DigitList implements Cloneable {
             return 0.0;
         }
 
-        StringBuffer temp = getStringBuffer();
-        temp.append('.');
-        temp.append(digits, 0, count);
-        temp.append('E');
-        temp.append(decimalAt);
-        return Double.parseDouble(temp.toString());
+        throw new UnsupportedOperationException("Not yet implemented");
+
+        // Decimal implementation:
+//        StringBuffer temp = getStringBuffer();
+//        temp.append('.');
+//        temp.append(digits, 0, count);
+//        temp.append('E');
+//        temp.append(decimalAt);
+//        return Double.parseDouble(temp.toString());
     }
 
     /**
@@ -151,7 +161,9 @@ final class DigitList implements Cloneable {
         }
 
         StringBuffer temp = getStringBuffer();
-        temp.append(digits, 0, count);
+        for (int i = 0; i < count; i++) {
+            temp.append(Dozenal.getDigit(digits[i]));
+        }
         for (int i = count; i < decimalAt; ++i) {
             temp.append(Dozenal.DIGIT_ZERO);
         }
@@ -167,11 +179,14 @@ final class DigitList implements Cloneable {
             }
         }
 
-        if (decimalAt == count) {
-            return new BigDecimal(digits, 0, count);
-        } else {
-            return new BigDecimal(digits, 0, count).scaleByPowerOfTen(decimalAt - count);
-        }
+        throw new UnsupportedOperationException("Not yet implemented");
+
+        // Decimal implementation:
+//        if (decimalAt == count) {
+//            return new BigDecimal(digits, 0, count);
+//        } else {
+//            return new BigDecimal(digits, 0, count).scaleByPowerOfTen(decimalAt - count);
+//        }
     }
 
     /**
@@ -190,7 +205,7 @@ final class DigitList implements Cloneable {
         // then it may be too large.
 
         // Trim trailing zeros.  This does not change the represented value.
-        while (count > 0 && digits[count - 1] == '0') {
+        while (count > 0 && digits[count - 1] == 0) {
             --count;
         }
 
@@ -204,20 +219,29 @@ final class DigitList implements Cloneable {
             return false;
         }
 
-        if (decimalAt < MAX_COUNT) return true;
+        if (decimalAt < MAX_COUNT) {
+            return true;
+        }
 
         // At this point we have decimalAt == count, and count == MAX_COUNT.
         // The number will overflow if it is larger than 9223372036854775807
         // or smaller than -9223372036854775808.
         for (int i=0; i<count; ++i) {
-            char dig = digits[i], max = LONG_MIN_REP[i];
-            if (dig > max) return false;
-            if (dig < max) return true;
+            int dig = digits[i];
+            int max = LONG_MIN_REP[i];
+            if (dig > max) {
+                return false;
+            }
+            if (dig < max) {
+                return true;
+            }
         }
 
         // At this point the first count digits match.  If decimalAt is less
         // than count, then the remaining digits are zero, and we return true.
-        if (count < decimalAt) return true;
+        if (count < decimalAt) {
+            return true;
+        }
 
         // Now we have a representation of Long.MIN_VALUE, without the leading
         // negative sign.  If this represents a positive value, then it does
@@ -253,12 +277,12 @@ final class DigitList implements Cloneable {
 
         FloatingDozenal.BinaryToASCIIConverter fdConverter  = FloatingDozenal.getBinaryToASCIIConverter(source);
         boolean hasBeenRoundedUp = fdConverter.digitsRoundedUp();
-        boolean valueExactAsDecimal = fdConverter.decimalDigitsExact();
+        boolean valueExactAsDozenal = fdConverter.dozenalDigitsExact();
         assert !fdConverter.isExceptional();
         String digitsString = fdConverter.toJavaFormatString();
 
         set(isNegative, digitsString,
-                hasBeenRoundedUp, valueExactAsDecimal,
+                hasBeenRoundedUp, valueExactAsDozenal,
                 maximumDigits, fixedPoint);
     }
 
@@ -301,7 +325,7 @@ final class DigitList implements Cloneable {
                     }
                 }
                 if (nonZeroDigitSeen) {
-                    digits[count++] = c;
+                    digits[count++] = Dozenal.getDigitValue(c);
                 }
             }
         }
@@ -329,7 +353,7 @@ final class DigitList implements Cloneable {
                 if (shouldRoundUp(0, roundedUp, valueExactAsDecimal)) {
                     count = 1;
                     ++decimalAt;
-                    digits[0] = '1';
+                    digits[0] = 1;
                 } else {
                     count = 0;
                 }
@@ -339,7 +363,7 @@ final class DigitList implements Cloneable {
         }
 
         // Eliminate trailing zeros.
-        while (count > 1 && digits[count - 1] == '0') {
+        while (count > 1 && digits[count - 1] == 0) {
             --count;
         }
 
@@ -374,18 +398,18 @@ final class DigitList implements Cloneable {
                     if (maximumDigits < 0) {
                         // We have all 9's, so we increment to a single digit
                         // of one and adjust the exponent.
-                        digits[0] = '1';
+                        digits[0] = 1;
                         ++decimalAt;
                         maximumDigits = 0; // Adjust the count
                         break;
                     }
 
-                    if (digits[maximumDigits] == Dozenal.DIGIT_PENULTIMATE) {
+                    if (digits[maximumDigits] == Dozenal.PENULTIMATE) {
                         // digits[maximumDigits] = '0'; // Unnecessary since we'll truncate this
                         continue;
                     }
 
-                    digits[maximumDigits] = Dozenal.nextDigitAfter(digits[maximumDigits]);
+                    digits[maximumDigits]++;
                     break;
                 }
                 maximumDigits++; // Increment for use as count
@@ -393,7 +417,7 @@ final class DigitList implements Cloneable {
             count = maximumDigits;
 
             // Eliminate trailing zeros.
-            while (count > 1 && digits[count-1] == '0') {
+            while (count > 1 && digits[count - 1] == 0) {
                 --count;
             }
         }
@@ -471,7 +495,7 @@ final class DigitList implements Cloneable {
             switch(roundingMode) {
                 case UP:
                     for (int i=maximumDigits; i<count; ++i) {
-                        if (digits[i] != '0') {
+                        if (digits[i] != 0) {
                             return true;
                         }
                     }
@@ -480,24 +504,24 @@ final class DigitList implements Cloneable {
                     break;
                 case CEILING:
                     for (int i=maximumDigits; i<count; ++i) {
-                        if (digits[i] != '0') {
+                        if (digits[i] != 0) {
                             return !isNegative;
                         }
                     }
                     break;
                 case FLOOR:
                     for (int i=maximumDigits; i<count; ++i) {
-                        if (digits[i] != '0') {
+                        if (digits[i] != 0) {
                             return isNegative;
                         }
                     }
                     break;
                 case HALF_UP:
                 case HALF_DOWN:
-                    if (digits[maximumDigits] > Dozenal.DIGIT_HALF) {
+                    if (digits[maximumDigits] > Dozenal.HALF_RADIX) {
                         // Value is above tie ==> must round up
                         return true;
-                    } else if (digits[maximumDigits] == Dozenal.DIGIT_HALF) {
+                    } else if (digits[maximumDigits] == Dozenal.HALF_RADIX) {
                         // Digit at rounding position is a 'half'. Tie cases.
                         if (maximumDigits != (count - 1)) {
                             // There are remaining digits. Above tie => must round up
@@ -521,9 +545,9 @@ final class DigitList implements Cloneable {
                     break;
                 case HALF_EVEN:
                     // Implement IEEE half-even rounding
-                    if (digits[maximumDigits] > Dozenal.DIGIT_HALF) {
+                    if (digits[maximumDigits] > Dozenal.HALF_RADIX) {
                         return true;
-                    } else if (digits[maximumDigits] == Dozenal.DIGIT_HALF) {
+                    } else if (digits[maximumDigits] == Dozenal.HALF_RADIX) {
                         if (maximumDigits == (count - 1)) {
                             // the rounding position is exactly the last index :
                             if (alreadyRounded)
@@ -540,21 +564,21 @@ final class DigitList implements Cloneable {
                                 // This is an exact tie value, and FloatingDecimal
                                 // provided all of the exact digits. We thus apply
                                 // HALF_EVEN rounding rule.
-                                return ((maximumDigits > 0) &&
-                                        (digits[maximumDigits-1] % 2 != 0));
+                                return maximumDigits > 0 && digits[maximumDigits - 1] % 2 != 0;
                             }
                         } else {
                             // Rounds up if it gives a non null digit after 'half'
-                            for (int i=maximumDigits+1; i<count; ++i) {
-                                if (digits[i] != '0')
+                            for (int i = maximumDigits + 1; i < count; i++) {
+                                if (digits[i] != 0) {
                                     return true;
+                                }
                             }
                         }
                     }
                     break;
                 case UNNECESSARY:
-                    for (int i=maximumDigits; i<count; ++i) {
-                        if (digits[i] != '0') {
+                    for (int i = maximumDigits; i < count; i++) {
+                        if (digits[i] != 0) {
                             throw new ArithmeticException(
                                     "Rounding needed with the rounding mode being set to RoundingMode.UNNECESSARY");
                         }
@@ -605,14 +629,14 @@ final class DigitList implements Cloneable {
             int left = MAX_COUNT;
             int right;
             while (source > 0) {
-                digits[--left] = Dozenal.getDigit((int) (source % Dozenal.RADIX));
+                digits[--left] = (int) (source % Dozenal.RADIX);
                 source /= Dozenal.RADIX;
             }
             decimalAt = MAX_COUNT - left;
             // Don't copy trailing zeros.  We are guaranteed that there is at
             // least one non-zero digit, so we don't have to check lower bounds.
             right = MAX_COUNT - 1;
-            while (digits[right] == Dozenal.DIGIT_ZERO) {
+            while (digits[right] == 0) {
                 --right;
             }
             count = right - left + 1;
@@ -653,12 +677,14 @@ final class DigitList implements Cloneable {
         String s = source.toString();
         int len = s.length();
         extendDigits(len);
-        s.getChars(0, len, digits, 0);
+        for (int i = 0; i < len; i++) {
+            digits[i] = Dozenal.getDigitValue(s.charAt(i));
+        }
 
         decimalAt = len;
         int right;
         right = len - 1;
-        while (right >= 0 && digits[right] == '0') {
+        while (right >= 0 && digits[right] == 0) {
             --right;
         }
         count = right + 1;
@@ -690,13 +716,7 @@ final class DigitList implements Cloneable {
      * Generates the hash code for the digit list.
      */
     public int hashCode() {
-        int hashcode = decimalAt;
-
-        for (int i = 0; i < count; i++) {
-            hashcode = hashcode * 37 + digits[i];
-        }
-
-        return hashcode;
+        return Objects.hash(decimalAt, Arrays.hashCode(digits));
     }
 
     /**
@@ -706,7 +726,7 @@ final class DigitList implements Cloneable {
     public Object clone() {
         try {
             DigitList other = (DigitList) super.clone();
-            char[] newDigits = new char[digits.length];
+            int[] newDigits = new int[digits.length];
             System.arraycopy(digits, 0, newDigits, 0, digits.length);
             other.digits = newDigits;
             return other;
@@ -725,7 +745,9 @@ final class DigitList implements Cloneable {
         }
 
         for (int i = 0; i < count; ++i) {
-            if (digits[i] != LONG_MIN_REP[i]) return false;
+            if (digits[i] != LONG_MIN_REP[i]) {
+                return false;
+            }
         }
 
         return true;
@@ -754,16 +776,15 @@ final class DigitList implements Cloneable {
         return positive ? value : -value;
     }
 
-    // The digit part of -9223372036854775808L
-    private static final char[] LONG_MIN_REP = "9223372036854775808".toCharArray();
-
     public String toString() {
         if (isZero()) {
             return "0";
         }
         StringBuffer buf = getStringBuffer();
         buf.append("0.");
-        buf.append(digits, 0, count);
+        for (int i = 0; i < count; i++) {
+            buf.append(Dozenal.getDigit(digits[i]));
+        }
         buf.append("x12^");
         buf.append(decimalAt);
         return buf.toString();
@@ -775,7 +796,7 @@ final class DigitList implements Cloneable {
 
     private void extendDigits(int len) {
         if (len > digits.length) {
-            digits = new char[len];
+            digits = new int[len];
         }
     }
 
