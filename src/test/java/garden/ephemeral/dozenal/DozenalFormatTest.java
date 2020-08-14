@@ -50,7 +50,11 @@ public class DozenalFormatTest {
                 arguments("36", 42L),
                 arguments("100", 144L),
                 arguments("1,000", 1728L),
-                arguments("1,000,000", 2985984L)
+                arguments("1,000,000", 2985984L),
+
+                arguments("-41↊,792,678,515,120,368", Long.MIN_VALUE),
+                arguments("41↊,792,678,515,120,367", Long.MAX_VALUE)
+
         );
     }
 

@@ -42,7 +42,7 @@ final class DigitList implements Cloneable {
      * is, in a Java double.  This must not be increased, or garbage digits
      * will be generated, and should not be decreased, or accuracy will be lost.
      */
-    public static final int MAX_COUNT = 19; // == Long.toString(Long.MAX_VALUE).length()
+    public static final int MAX_COUNT = 18;
 
     /**
      * {@link Long#MIN_VALUE} formatted in base 12 sans minus sign.
@@ -618,10 +618,13 @@ final class DigitList implements Cloneable {
         // be represented by DigitList.
         if (source <= 0) {
             if (source == Long.MIN_VALUE) {
-                decimalAt = count = MAX_COUNT;
+                count = MAX_COUNT;
+                decimalAt = MAX_COUNT;
                 System.arraycopy(LONG_MIN_REP, 0, digits, 0, count);
             } else {
-                decimalAt = count = 0; // Values <= 0 format as zero
+                // Values <= 0 format as zero
+                count = 0;
+                decimalAt = 0;
             }
         } else {
             // Rewritten to improve performance.  I used to call
@@ -674,11 +677,11 @@ final class DigitList implements Cloneable {
      */
     final void set(boolean isNegative, BigInteger source, int maximumDigits) {
         this.isNegative = isNegative;
-        String s = source.toString();
+        String s = source.toString(12);
         int len = s.length();
         extendDigits(len);
         for (int i = 0; i < len; i++) {
-            digits[i] = Dozenal.getDigitValue(s.charAt(i));
+            digits[i] = Character.digit(s.charAt(i), 12);
         }
 
         decimalAt = len;
