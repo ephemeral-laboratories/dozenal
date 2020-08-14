@@ -23,7 +23,7 @@ jobs:
 
         # `GITHUB_REF` looks like 'refs/tags/xxx'
         run: |
-          NEW_VERSION=$(echo "${GITHUB_REF}" | cut -d "/" -f3)
+          NEW_VERSION=$(echo "${GITHUB_REF}" | cut -d '/' -f3 | sed 's/^v//')
           echo "New version: ${NEW_VERSION}"
           echo "Github username: ${GITHUB_ACTOR}"
           chmod u+x gradlew
