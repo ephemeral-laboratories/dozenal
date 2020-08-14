@@ -22,7 +22,7 @@ import java.math.RoundingMode;
  * The DigitList representation consists of a string of characters,
  * which are the digits radix 10, from '0' to '9'.  It also has a radix
  * 10 exponent associated with it.  The value represented by a DigitList
- * object can be computed by mulitplying the fraction f, where 0 <= f < 1,
+ * object can be computed by multiplying the fraction f, where 0 <= f < 1,
  * derived by placing all the digits of the list to the right of the
  * decimal point, by 10^exponent.
  *
@@ -55,7 +55,7 @@ final class DigitList implements Cloneable {
      * f is a value 0.1 <= f < 1 arrived at by placing the digits in Digits to
      * the right of the decimal.
      *
-     * DigitList is normalized, so if it is non-zero, figits[0] is non-zero.  We
+     * DigitList is normalized, so if it is non-zero, digits[0] is non-zero.  We
      * don't allow denormalized numbers because our exponent is effectively of
      * unlimited magnitude.  The count value contains the number of significant
      * digits present in digits[].
@@ -296,8 +296,9 @@ final class DigitList implements Cloneable {
             } else {
                 if (!nonZeroDigitSeen) {
                     nonZeroDigitSeen = (c != '0');
-                    if (!nonZeroDigitSeen && decimalAt != -1)
+                    if (!nonZeroDigitSeen && decimalAt != -1) {
                         ++leadingZerosAfterDecimal;
+                    }
                 }
                 if (nonZeroDigitSeen) {
                     digits[count++] = c;
@@ -368,7 +369,7 @@ final class DigitList implements Cloneable {
                 // Rounding up involved incrementing digits from LSD to MSD.
                 // In most cases this is simple, but in a worst case situation
                 // (9999..99) we have to adjust the decimalAt value.
-                for (;;) {
+                while (true) {
                     --maximumDigits;
                     if (maximumDigits < 0) {
                         // We have all 9's, so we increment to a single digit
@@ -387,7 +388,7 @@ final class DigitList implements Cloneable {
                     digits[maximumDigits] = Dozenal.nextDigitAfter(digits[maximumDigits]);
                     break;
                 }
-                ++maximumDigits; // Increment for use as count
+                maximumDigits++; // Increment for use as count
             }
             count = maximumDigits;
 
@@ -428,7 +429,7 @@ final class DigitList implements Cloneable {
              * rounding done, is needed in this class.
              *
              * - For the  HALF_DOWN, HALF_EVEN, HALF_UP rounding rules below:
-             *   In the case of formating float or double, We must take into
+             *   In the case of formatting float or double, We must take into
              *   account what FloatingDecimal has done in the binary to decimal
              *   conversion.
              *
@@ -610,8 +611,10 @@ final class DigitList implements Cloneable {
             decimalAt = MAX_COUNT - left;
             // Don't copy trailing zeros.  We are guaranteed that there is at
             // least one non-zero digit, so we don't have to check lower bounds.
-            for (right = MAX_COUNT - 1; digits[right] == Dozenal.DIGIT_ZERO; --right)
-                ;
+            right = MAX_COUNT - 1;
+            while (digits[right] == Dozenal.DIGIT_ZERO) {
+                --right;
+            }
             count = right - left + 1;
             System.arraycopy(digits, left, digits, 0, count);
         }
@@ -654,8 +657,10 @@ final class DigitList implements Cloneable {
 
         decimalAt = len;
         int right;
-        for (right = len - 1; right >= 0 && digits[right] == '0'; --right)
-            ;
+        right = len - 1;
+        while (right >= 0 && digits[right] == '0') {
+            --right;
+        }
         count = right + 1;
 
         if (maximumDigits > 0) {
