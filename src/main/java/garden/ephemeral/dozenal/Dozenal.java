@@ -79,11 +79,14 @@ public class Dozenal {
                 if (firstChar == '-') {
                     negative = true;
                     limit = Long.MIN_VALUE;
-                } else if (firstChar != '+')
+                } else if (firstChar != '+') {
                     throw new NumberFormatException("For input string: \"" + s + "\"");
+                }
 
                 if (len == 1) // Cannot have lone "+" or "-"
+                {
                     throw new NumberFormatException("For input string: \"" + s + "\"");
+                }
                 i++;
             }
             multmin = limit / RADIX;

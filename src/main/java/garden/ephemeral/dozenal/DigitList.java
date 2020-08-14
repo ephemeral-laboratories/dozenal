@@ -206,7 +206,7 @@ final class DigitList implements Cloneable {
 
         // Trim trailing zeros.  This does not change the represented value.
         while (count > 0 && digits[count - 1] == 0) {
-            --count;
+            count--;
         }
 
         if (count == 0) {
@@ -319,7 +319,7 @@ final class DigitList implements Cloneable {
                 break;
             } else {
                 if (!nonZeroDigitSeen) {
-                    nonZeroDigitSeen = (c != '0');
+                    nonZeroDigitSeen = c != '0';
                     if (!nonZeroDigitSeen && decimalAt != -1) {
                         ++leadingZerosAfterDecimal;
                     }
@@ -369,7 +369,7 @@ final class DigitList implements Cloneable {
 
         // Eliminate digits beyond maximum digits to be displayed.
         // Round up if appropriate.
-        round(fixedPoint ? (maximumDigits + decimalAt) : maximumDigits,
+        round(fixedPoint ? maximumDigits + decimalAt : maximumDigits,
                 roundedUp, valueExactAsDecimal);
 
     }
@@ -394,12 +394,12 @@ final class DigitList implements Cloneable {
                 // In most cases this is simple, but in a worst case situation
                 // (9999..99) we have to adjust the decimalAt value.
                 while (true) {
-                    --maximumDigits;
+                    maximumDigits--;
                     if (maximumDigits < 0) {
                         // We have all 9's, so we increment to a single digit
                         // of one and adjust the exponent.
                         digits[0] = 1;
-                        ++decimalAt;
+                        decimalAt++;
                         maximumDigits = 0; // Adjust the count
                         break;
                     }
@@ -494,7 +494,7 @@ final class DigitList implements Cloneable {
 
             switch(roundingMode) {
                 case UP:
-                    for (int i=maximumDigits; i<count; ++i) {
+                    for (int i = maximumDigits; i < count; ++i) {
                         if (digits[i] != 0) {
                             return true;
                         }
@@ -503,14 +503,14 @@ final class DigitList implements Cloneable {
                 case DOWN:
                     break;
                 case CEILING:
-                    for (int i=maximumDigits; i<count; ++i) {
+                    for (int i = maximumDigits; i < count; ++i) {
                         if (digits[i] != 0) {
                             return !isNegative;
                         }
                     }
                     break;
                 case FLOOR:
-                    for (int i=maximumDigits; i<count; ++i) {
+                    for (int i = maximumDigits; i < count; ++i) {
                         if (digits[i] != 0) {
                             return isNegative;
                         }
@@ -523,7 +523,7 @@ final class DigitList implements Cloneable {
                         return true;
                     } else if (digits[maximumDigits] == Dozenal.HALF_RADIX) {
                         // Digit at rounding position is a 'half'. Tie cases.
-                        if (maximumDigits != (count - 1)) {
+                        if (maximumDigits != count - 1) {
                             // There are remaining digits. Above tie => must round up
                             return true;
                         } else {
@@ -548,19 +548,20 @@ final class DigitList implements Cloneable {
                     if (digits[maximumDigits] > Dozenal.HALF_RADIX) {
                         return true;
                     } else if (digits[maximumDigits] == Dozenal.HALF_RADIX) {
-                        if (maximumDigits == (count - 1)) {
+                        if (maximumDigits == count - 1) {
                             // the rounding position is exactly the last index :
-                            if (alreadyRounded)
+                            if (alreadyRounded) {
                                 // If FloatingDecimal rounded up (value was below tie),
                                 // then we should not round up again.
                                 return false;
+                            }
 
-                            if (!valueExactAsDecimal)
+                            if (!valueExactAsDecimal) {
                                 // Otherwise if the digits don't represent exact value,
                                 // value was above tie and FloatingDecimal truncated
                                 // digits to tie. We must round up.
                                 return true;
-                            else {
+                            } else {
                                 // This is an exact tie value, and FloatingDecimal
                                 // provided all of the exact digits. We thus apply
                                 // HALF_EVEN rounding rule.
@@ -640,12 +641,14 @@ final class DigitList implements Cloneable {
             // least one non-zero digit, so we don't have to check lower bounds.
             right = MAX_COUNT - 1;
             while (digits[right] == 0) {
-                --right;
+                right--;
             }
             count = right - left + 1;
             System.arraycopy(digits, left, digits, 0, count);
         }
-        if (maximumDigits > 0) round(maximumDigits, false, true);
+        if (maximumDigits > 0) {
+            round(maximumDigits, false, true);
+        }
     }
 
     /**
@@ -701,17 +704,21 @@ final class DigitList implements Cloneable {
      * equality test between two digit lists.
      */
     public boolean equals(Object obj) {
-        if (this == obj)                      // quick check
+        if (this == obj) {
             return true;
-        if (!(obj instanceof DigitList))         // (1) same object?
+        }
+        if (!(obj instanceof DigitList)) {
             return false;
+        }
         DigitList other = (DigitList) obj;
-        if (count != other.count ||
-                decimalAt != other.decimalAt)
+        if (count != other.count || decimalAt != other.decimalAt) {
             return false;
-        for (int i = 0; i < count; i++)
-            if (digits[i] != other.digits[i])
+        }
+        for (int i = 0; i < count; i++) {
+            if (digits[i] != other.digits[i]) {
                 return false;
+            }
+        }
         return true;
     }
 

@@ -399,12 +399,13 @@ public class DozenalFormat extends NumberFormat {
     public final StringBuffer format(Object number,
                                      StringBuffer toAppendTo,
                                      FieldPosition pos) {
-        if (number instanceof Long || number instanceof Integer ||
-                number instanceof Short || number instanceof Byte ||
+        if (number instanceof Long ||
+                number instanceof Integer ||
+                number instanceof Short ||
+                number instanceof Byte ||
                 number instanceof AtomicInteger ||
                 number instanceof AtomicLong ||
-                (number instanceof BigInteger &&
-                        ((BigInteger)number).bitLength () < 64)) {
+                number instanceof BigInteger && ((BigInteger) number).bitLength() < 64) {
             return format(((Number)number).longValue(), toAppendTo, pos);
         } else if (number instanceof BigDecimal) {
             return formatInternal((BigDecimal)number, toAppendTo, pos);
@@ -487,7 +488,7 @@ public class DozenalFormat extends NumberFormat {
          * -Infinity.  Proper detection of -0.0 is needed to deal with the
          * issues raised by bugs 4106658, 4106667, and 4147706.  Liu 7/6/98.
          */
-        boolean isNegative = ((number < 0.0) || (number == 0.0 && 1/number < 0.0)) ^ (multiplier < 0);
+        boolean isNegative = (number < 0.0 || (number == 0.0 && 1 / number < 0.0)) ^ (multiplier < 0);
 
         if (multiplier != 1) {
             number *= multiplier;
@@ -495,11 +496,9 @@ public class DozenalFormat extends NumberFormat {
 
         if (Double.isInfinite(number)) {
             if (isNegative) {
-                append(result, negativePrefix, fieldPosition,
-                        getNegativePrefixFieldPositions(), Field.SIGN);
+                append(result, negativePrefix, fieldPosition, getNegativePrefixFieldPositions(), Field.SIGN);
             } else {
-                append(result, positivePrefix, fieldPosition,
-                        getPositivePrefixFieldPositions(), Field.SIGN);
+                append(result, positivePrefix, fieldPosition, getPositivePrefixFieldPositions(), Field.SIGN);
             }
 
             int iFieldStart = result.length();
@@ -507,11 +506,9 @@ public class DozenalFormat extends NumberFormat {
             formatted(fieldPosition, Field.INTEGER, iFieldStart, result.length());
 
             if (isNegative) {
-                append(result, negativeSuffix, fieldPosition,
-                        getNegativeSuffixFieldPositions(), Field.SIGN);
+                append(result, negativeSuffix, fieldPosition, getNegativeSuffixFieldPositions(), Field.SIGN);
             } else {
-                append(result, positiveSuffix, fieldPosition,
-                        getPositiveSuffixFieldPositions(), Field.SIGN);
+                append(result, positiveSuffix, fieldPosition, getPositiveSuffixFieldPositions(), Field.SIGN);
             }
 
             return result;
@@ -522,16 +519,16 @@ public class DozenalFormat extends NumberFormat {
         }
 
         // at this point we are guaranteed a nonnegative finite number.
-        assert(number >= 0 && !Double.isInfinite(number));
+        assert number >= 0 && !Double.isInfinite(number);
 
-        synchronized(digitList) {
+        synchronized (digitList) {
             int maxIntDigits = super.getMaximumIntegerDigits();
             int minIntDigits = super.getMinimumIntegerDigits();
             int maxFraDigits = super.getMaximumFractionDigits();
             int minFraDigits = super.getMinimumFractionDigits();
 
-            digitList.set(isNegative, number, useExponentialNotation ?
-                            maxIntDigits + maxFraDigits : maxFraDigits,
+            digitList.set(isNegative, number,
+                    useExponentialNotation ? maxIntDigits + maxFraDigits : maxFraDigits,
                     !useExponentialNotation);
             return subformat(result, fieldPosition, isNegative, false,
                     maxIntDigits, minIntDigits, maxFraDigits, minFraDigits);
@@ -576,7 +573,7 @@ public class DozenalFormat extends NumberFormat {
      * @see java.text.FieldPosition
      */
     private StringBuffer formatInternal(long number, StringBuffer result, FieldPosition fieldPosition) {
-        boolean isNegative = (number < 0);
+        boolean isNegative = number < 0;
         if (isNegative) {
             number = -number;
         }
@@ -597,7 +594,7 @@ public class DozenalFormat extends NumberFormat {
             if (cutoff < 0) {
                 cutoff = -cutoff;
             }
-            useBigInteger = (number > cutoff);
+            useBigInteger = number > cutoff;
         }
 
         if (useBigInteger) {
@@ -681,7 +678,7 @@ public class DozenalFormat extends NumberFormat {
             int maximumDigits = maxIntDigits + maxFraDigits;
 
             digitList.set(isNegative, number, useExponentialNotation ?
-                    ((maximumDigits < 0) ? Integer.MAX_VALUE : maximumDigits) :
+                    (maximumDigits < 0) ? Integer.MAX_VALUE : maximumDigits :
                     maxFraDigits, !useExponentialNotation);
 
             return subformat(result, fieldPosition, isNegative, false,
@@ -902,16 +899,16 @@ public class DozenalFormat extends NumberFormat {
         boolean fastPathWasOn = isFastPath;
 
         if ((roundingMode == RoundingMode.HALF_EVEN) &&
-                (isGroupingUsed()) &&
+                isGroupingUsed() &&
                 (groupingSize == 3) &&
                 (multiplier == 1) &&
-                (!decimalSeparatorAlwaysShown) &&
-                (!useExponentialNotation)) {
+                !decimalSeparatorAlwaysShown &&
+                !useExponentialNotation) {
 
             // The fast-path algorithm is semi-hardcoded against
             //  minimumIntegerDigits and maximumIntegerDigits.
-            isFastPath = ((minimumIntegerDigits == 1) &&
-                    (maximumIntegerDigits >= 10));
+            isFastPath = (minimumIntegerDigits == 1) &&
+                    (maximumIntegerDigits >= 10);
 
             // The fast-path algorithm is hardcoded against
             //  minimumFractionDigits and maximumFractionDigits.
@@ -1107,7 +1104,7 @@ public class DozenalFormat extends NumberFormat {
         }
 
         // Shewchuk/Dekker's FastTwoSum(approxMedium, approxMin).
-        assert(-approxMedium >= Math.abs(approxMin));
+        assert -approxMedium >= Math.abs(approxMin);
         fastTwoSumApproximation = approxMedium + approxMin;
         bVirtual = fastTwoSumApproximation - approxMedium;
         fastTwoSumRoundOff = approxMin - bVirtual;
@@ -1115,7 +1112,7 @@ public class DozenalFormat extends NumberFormat {
         double roundoffS1 = fastTwoSumRoundOff;
 
         // Shewchuk/Dekker's FastTwoSum(approxMax, approxS1);
-        assert(approxMax >= Math.abs(approxS1));
+        assert approxMax >= Math.abs(approxS1);
         fastTwoSumApproximation = approxMax + approxS1;
         bVirtual = fastTwoSumApproximation - approxMax;
         fastTwoSumRoundOff = approxS1 - bVirtual;
@@ -1124,7 +1121,7 @@ public class DozenalFormat extends NumberFormat {
         double roundoffTotal = roundoffS1 + roundoff1000;
 
         // Shewchuk/Dekker's FastTwoSum(approx1000, roundoffTotal);
-        assert(approx1000 >= Math.abs(roundoffTotal));
+        assert approx1000 >= Math.abs(roundoffTotal);
         fastTwoSumApproximation = approx1000 + roundoffTotal;
         bVirtual = fastTwoSumApproximation - approx1000;
 
@@ -1542,7 +1539,7 @@ public class DozenalFormat extends NumberFormat {
             negative = true;
             d = -d;
         } else if (d == 0.0d) {
-            negative = (Math.copySign(1.0d, d) == -1.0d);
+            negative = Math.copySign(1.0d, d) == -1.0d;
             d = +0.0d;
         }
 
@@ -2024,7 +2021,7 @@ public class DozenalFormat extends NumberFormat {
                     if (longResult % multiplier == 0) {
                         longResult /= multiplier;
                     } else {
-                        doubleResult = ((double)longResult) / multiplier;
+                        doubleResult = (double)longResult / multiplier;
                         gotDouble = true;
                     }
                 }
@@ -2175,9 +2172,9 @@ public class DozenalFormat extends NumberFormat {
                         // digits yet, then we account for leading zeros by
                         // decrementing the digits.decimalAt into negative
                         // values.
-                        --digits.decimalAt;
+                        digits.decimalAt--;
                     } else {
-                        ++digitCount;
+                        digitCount++;
                         digits.append(digit);
                     }
                 } else if (digit > 0 && digit <= Dozenal.PENULTIMATE) { // [sic] digit==0 handled above
@@ -2970,15 +2967,15 @@ public class DozenalFormat extends NumberFormat {
             int digitCount = useExponentialNotation
                     ? getMaximumIntegerDigits()
                     : Math.max(groupingSize, getMinimumIntegerDigits())+1;
-            for (i = digitCount; i > 0; --i) {
+            for (i = digitCount; i > 0; i--) {
                 if (i != digitCount && isGroupingUsed() && groupingSize != 0 &&
                         i % groupingSize == 0) {
                     result.append(localized ? symbols.getGroupingSeparator() :
                             PATTERN_GROUPING_SEPARATOR);
                 }
                 result.append(i <= getMinimumIntegerDigits()
-                        ? (localized ? symbols.getZeroDigit() : PATTERN_ZERO_DIGIT)
-                        : (localized ? symbols.getDigit() : PATTERN_DIGIT));
+                        ? localized ? symbols.getZeroDigit() : PATTERN_ZERO_DIGIT
+                        : localized ? symbols.getDigit() : PATTERN_DIGIT);
             }
             if (getMaximumFractionDigits() > 0 || decimalSeparatorAlwaysShown) {
                 result.append(localized ? symbols.getDecimalSeparator() :
@@ -3149,14 +3146,13 @@ public class DozenalFormat extends NumberFormat {
                                 continue;
                             }
                         } else {
-                            // Process unquoted characters seen in prefix or suffix
-                            // phase.
+                            // Process unquoted characters seen in prefix or suffix phase.
                             if (ch == digit ||
                                     ch == zeroDigit ||
                                     ch == groupingSeparator ||
                                     ch == decimalSeparator) {
                                 phase = 1;
-                                --pos; // Reprocess this character
+                                pos--; // Reprocess this character
                                 continue;
                             } else if (ch == CURRENCY_SIGN) {
                                 // Use lookahead to determine if the currency sign
@@ -3164,7 +3160,7 @@ public class DozenalFormat extends NumberFormat {
                                 boolean doubled = (pos + 1) < pattern.length() &&
                                         pattern.charAt(pos + 1) == CURRENCY_SIGN;
                                 if (doubled) { // Skip over the doubled character
-                                    ++pos;
+                                    pos++;
                                 }
                                 isCurrencyFormat = true;
                                 affix.append(doubled ? "'\u00A4\u00A4" : "'\u00A4");
@@ -3174,16 +3170,14 @@ public class DozenalFormat extends NumberFormat {
                                 // opening quote or two quotes, which is a quote
                                 // literal. That is, we have the first quote in 'do'
                                 // or o''clock.
-                                if (ch == QUOTE) {
-                                    if ((pos+1) < pattern.length() &&
-                                            pattern.charAt(pos+1) == QUOTE) {
-                                        ++pos;
-                                        affix.append("''"); // o''clock
-                                    } else {
-                                        inQuote = true; // 'do'
-                                    }
-                                    continue;
+                                if ((pos + 1) < pattern.length() &&
+                                        pattern.charAt(pos + 1) == QUOTE) {
+                                    pos++;
+                                    affix.append("''"); // o''clock
+                                } else {
+                                    inQuote = true; // 'do'
                                 }
+                                continue;
                             } else if (ch == separator) {
                                 // Don't allow separators before we see digit
                                 // characters of phase 1, and don't allow separators
@@ -3314,12 +3308,12 @@ public class DozenalFormat extends NumberFormat {
                             // Transition to phase 2
                             phase = 2;
                             affix = suffix;
-                            --pos;
+                            pos--;
                             continue;
                         } else {
                             phase = 2;
                             affix = suffix;
-                            --pos;
+                            pos--;
                             continue;
                         }
                         break;

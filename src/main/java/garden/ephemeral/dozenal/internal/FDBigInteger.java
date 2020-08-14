@@ -295,7 +295,7 @@ public /*@ spec_bigint_math @*/ class FDBigInteger {
                     r = new int[pow6.nWords + 2 + ((p2 != 0) ? 1 : 0)];
                     mult(pow6.data, pow6.nWords, v0, v1, r);
                 }
-                return (new FDBigInteger(r, pow6.offset)).leftShift(p2);
+                return new FDBigInteger(r, pow6.offset).leftShift(p2);
             }
         } else if (p2 != 0) {
             if (bitcount == 0) {
@@ -393,9 +393,9 @@ public /*@ spec_bigint_math @*/ class FDBigInteger {
      @*/
     private static void leftShift(int[] src, int idx, int[] result, int bitcount, int anticount, int prev){
         for (; idx > 0; idx--) {
-            int v = (prev << bitcount);
+            int v = prev << bitcount;
             prev = src[idx - 1];
-            v |= (prev >>> anticount);
+            v |= prev >>> anticount;
             result[idx] = v;
         }
         int v = prev << bitcount;
@@ -459,9 +459,9 @@ public /*@ spec_bigint_math @*/ class FDBigInteger {
                     int idx = 0;
                     int prev = data[idx];
                     for (; idx < nWords - 1; idx++) {
-                        int v = (prev >>> anticount);
+                        int v = prev >>> anticount;
                         prev = data[idx + 1];
-                        v |= (prev << bitcount);
+                        v |= prev << bitcount;
                         data[idx] = v;
                     }
                     int v = prev >>> anticount;
@@ -637,7 +637,8 @@ public /*@ spec_bigint_math @*/ class FDBigInteger {
             if (p != 0) {
                 if (nWords == data.length) {
                     if (data[0] == 0) {
-                        System.arraycopy(data, 1, data, 0, --nWords);
+                        nWords--;
+                        System.arraycopy(data, 1, data, 0, nWords);
                         offset++;
                     } else {
                         data = Arrays.copyOf(data, data.length + 1);
@@ -1028,9 +1029,9 @@ public /*@ spec_bigint_math @*/ class FDBigInteger {
         if (bSize + 1 < thSize) {
             return 1;
         }
-        long top = (big.data[big.nWords - 1] & LONG_MASK);
+        long top = big.data[big.nWords - 1] & LONG_MASK;
         if (sSize == bSize) {
-            top += (small.data[small.nWords - 1] & LONG_MASK);
+            top += small.data[small.nWords - 1] & LONG_MASK;
         }
         if ((top >>> 32) == 0) {
             if (((top + 1) >>> 32) == 0) {
@@ -1039,7 +1040,7 @@ public /*@ spec_bigint_math @*/ class FDBigInteger {
                     return 1;
                 }
                 // here sum.nWords == this.nWords
-                long v = (this.data[this.nWords - 1] & LONG_MASK);
+                long v = this.data[this.nWords - 1] & LONG_MASK;
                 if (v < top) {
                     return -1;
                 }
@@ -1053,7 +1054,7 @@ public /*@ spec_bigint_math @*/ class FDBigInteger {
             }
             // here sum.nWords == this.nWords
             top >>>= 32;
-            long v = (this.data[this.nWords - 1] & LONG_MASK);
+            long v = this.data[this.nWords - 1] & LONG_MASK;
             if (v < top) {
                 return -1;
             }
@@ -1173,12 +1174,12 @@ public /*@ spec_bigint_math @*/ class FDBigInteger {
         long carry = 0L;
         for (; i < smallLen; i++) {
             carry += (i < big.offset   ? 0L : (big.data[i - big.offset] & LONG_MASK) )
-                    + ((i < small.offset ? 0L : (small.data[i - small.offset] & LONG_MASK)));
+                    + (i < small.offset ? 0L : (small.data[i - small.offset] & LONG_MASK));
             r[i] = (int) carry;
             carry >>= 32; // signed shift.
         }
         for (; i < bigLen; i++) {
-            carry += (i < big.offset ? 0L : (big.data[i - big.offset] & LONG_MASK) );
+            carry += i < big.offset ? 0L : (big.data[i - big.offset] & LONG_MASK);
             r[i] = (int) carry;
             carry >>= 32; // signed shift.
         }

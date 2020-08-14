@@ -18,10 +18,10 @@ public class FloatingDozenal {
     // (There are more really boring constants at the end.)
     //
     static final int EXP_SHIFT = DoubleConsts.SIGNIFICAND_WIDTH - 1;
-    static final long FRACT_HOB = ( 1L<<EXP_SHIFT ); // assumed High-Order bit
-    static final long EXP_ONE   = ((long)DoubleConsts.EXP_BIAS)<<EXP_SHIFT; // exponent of 1.0
+    static final long FRACT_HOB = 1L << EXP_SHIFT; // assumed High-Order bit
+    static final long EXP_ONE   = (long) DoubleConsts.EXP_BIAS << EXP_SHIFT; // exponent of 1.0
     static final int MAX_SMALL_BIN_EXP = 62;
-    static final int MIN_SMALL_BIN_EXP = -( 63 / 3 );
+    static final int MIN_SMALL_BIN_EXP = -(63 / 3);
     static final int MAX_DOZENAL_DIGITS = 15;
     static final int MAX_DECIMAL_EXPONENT = 308;
     static final int MIN_DECIMAL_EXPONENT = -324;
@@ -417,12 +417,12 @@ public class FloatingDozenal {
             exactDecimalConversion = false;
 
             // number of significant bits to the right of the point.
-            int nTinyBits = Math.max( 0, nFractBits - binExp - 1 );
-            if ( binExp <= MAX_SMALL_BIN_EXP && binExp >= MIN_SMALL_BIN_EXP ){
+            int nTinyBits = Math.max(0, nFractBits - binExp - 1);
+            if (binExp <= MAX_SMALL_BIN_EXP && binExp >= MIN_SMALL_BIN_EXP) {
                 // Look more closely at the number to decide if,
                 // with scaling by 10^nTinyBits, the result will fit in
                 // a long.
-                if ( (nTinyBits < FDBigInteger.LONG_6_POW.length) && ((nFractBits + N_5_BITS[nTinyBits]) < 64 ) ){
+                if (nTinyBits < FDBigInteger.LONG_6_POW.length && nFractBits + N_5_BITS[nTinyBits] < 64){
                     //
                     // We can do this:
                     // take the fraction bits, which are normalized.
@@ -438,19 +438,19 @@ public class FloatingDozenal {
                     //     in the result. The integer you get from this can
                     //     then be converted to a string pretty easily.
                     //
-                    if ( nTinyBits == 0 ) {
+                    if (nTinyBits == 0) {
                         int insignificant;
-                        if ( binExp > nSignificantBits ){
-                            insignificant = insignificantDigitsForPow2(binExp-nSignificantBits-1);
+                        if (binExp > nSignificantBits) {
+                            insignificant = insignificantDigitsForPow2(binExp - nSignificantBits - 1);
                         } else {
                             insignificant = 0;
                         }
-                        if ( binExp >= EXP_SHIFT ){
-                            fractBits <<= (binExp-EXP_SHIFT);
+                        if (binExp >= EXP_SHIFT) {
+                            fractBits <<= binExp - EXP_SHIFT;
                         } else {
-                            fractBits >>>= (EXP_SHIFT-binExp) ;
+                            fractBits >>>= EXP_SHIFT - binExp;
                         }
-                        developLongDigits( 0, fractBits, insignificant );
+                        developLongDigits(0, fractBits, insignificant);
                         return;
                     }
                     //
@@ -513,7 +513,7 @@ public class FloatingDozenal {
             //
             fractBits >>>= tailZeros;
             B2 -= nFractBits-1;
-            int common2factor = Math.min( B2, S2 );
+            int common2factor = Math.min(B2, S2);
             B2 -= common2factor;
             S2 -= common2factor;
             M2 -= common2factor;
@@ -568,7 +568,7 @@ public class FloatingDozenal {
             int Bbits = nFractBits + B2 + (( B5 < N_5_BITS.length )? N_5_BITS[B5] : ( B5*3 ));
 
             // binary digits needed to represent 10*S, approx.
-            int tenSbits = S2+1 + (( (S5+1) < N_5_BITS.length )? N_5_BITS[(S5+1)] : ( (S5+1)*3 ));
+            int tenSbits = S2+1 + (( (S5+1) < N_5_BITS.length )? N_5_BITS[S5+1] : ( (S5+1)*3 ));
             if ( Bbits < 64 && tenSbits < 64){
                 if ( Bbits < 32 && tenSbits < 32){
                     // wa-hoo! They're all ints!
@@ -585,8 +585,8 @@ public class FloatingDozenal {
                     q = b / s;
                     b = Dozenal.RADIX * (b % s);
                     m *= Dozenal.RADIX;
-                    low  = (b < m);
-                    high = (b+m > tens);
+                    low  = b < m;
+                    high = b+m > tens;
                     assert q < Dozenal.RADIX : q; // excessively large digit
                     if ( (q == 0) && ! high ){
                         // oops. Usually ignore leading zero.
@@ -609,8 +609,8 @@ public class FloatingDozenal {
                         m *= Dozenal.RADIX;
                         assert q < Dozenal.RADIX : q; // excessively large digit
                         if ( m > 0L ){
-                            low  = (b <  m );
-                            high = (b+m > tens );
+                            low  = b <  m;
+                            high = b+m > tens;
                         } else {
                             // hack -- m might overflow!
                             // in this case, it is certainly > b,
@@ -623,7 +623,7 @@ public class FloatingDozenal {
                         digits[ndigit++] = Dozenal.getDigit(q);
                     }
                     lowDigitDifference = (b << 1) - tens;
-                    exactDecimalConversion  = (b == 0);
+                    exactDecimalConversion  = b == 0;
                 } else {
                     // still good! they're all longs!
                     long b = (fractBits * FDBigInteger.LONG_6_POW[B5] ) << B2;
@@ -639,8 +639,8 @@ public class FloatingDozenal {
                     q = (int) ( b / s );
                     b = Dozenal.RADIX * ( b % s );
                     m *= Dozenal.RADIX;
-                    low  = (b < m);
-                    high = (b+m > tens);
+                    low  = b < m;
+                    high = b+m > tens;
                     assert q < Dozenal.RADIX : q; // excessively large digit
                     if ( (q == 0) && ! high ){
                         // oops. Usually ignore leading zero.
@@ -663,8 +663,8 @@ public class FloatingDozenal {
                         m *= Dozenal.RADIX;
                         assert q < Dozenal.RADIX : q;  // excessively large digit
                         if ( m > 0L ){
-                            low  = (b <  m );
-                            high = (b+m > tens );
+                            low  = b <  m;
+                            high = b+m > tens;
                         } else {
                             // hack -- m might overflow!
                             // in this case, it is certainly > b,
@@ -677,7 +677,7 @@ public class FloatingDozenal {
                         digits[ndigit++] = Dozenal.getDigit(q);
                     }
                     lowDigitDifference = (b<<1) - tens;
-                    exactDecimalConversion  = (b == 0);
+                    exactDecimalConversion  = b == 0;
                 }
             } else {
                 //
@@ -698,16 +698,17 @@ public class FloatingDozenal {
                 // case, we discard it and decrement decExp.
                 //
                 ndigit = 0;
-                q = Bval.quoRemIteration( Sval );
-                low  = (Bval.cmp( Mval ) < 0);
+                q = Bval.quoRemIteration(Sval);
+                low  = Bval.cmp(Mval) < 0;
                 high = tenSval.addAndCmp(Bval,Mval)<=0;
 
                 assert q < Dozenal.RADIX : q; // excessively large digit
-                if ( (q == 0) && ! high ){
+                if ((q == 0) && !high){
                     // oops. Usually ignore leading zero.
                     dozExp--;
                 } else {
-                    digits[ndigit++] = Dozenal.getDigit(q);
+                    digits[ndigit] = Dozenal.getDigit(q);
+                    ndigit++;
                 }
                 //
                 // HACK! Java spec sez that we always have at least
@@ -715,24 +716,25 @@ public class FloatingDozenal {
                 // Thus we will need more than one digit if we're using
                 // E-form
                 //
-                if (!isCompatibleFormat || dozExp < -3 || dozExp >= 8 ){
-                    high = low = false;
+                if (!isCompatibleFormat || dozExp < -3 || dozExp >= 8) {
+                    low = false;
+                    high = false;
                 }
-                while( ! low && ! high ){
-                    q = Bval.quoRemIteration( Sval );
+                while (!low && !high) {
+                    q = Bval.quoRemIteration(Sval);
                     assert q < Dozenal.RADIX : q;  // excessively large digit
                     Mval = Mval.multByRadix(); //Mval = Mval.mult( 10 );
-                    low  = (Bval.cmp( Mval ) < 0);
-                    high = tenSval.addAndCmp(Bval,Mval)<=0;
+                    low  = Bval.cmp(Mval) < 0;
+                    high = tenSval.addAndCmp(Bval, Mval)<=0;
                     digits[ndigit++] = Dozenal.getDigit(q);
                 }
-                if ( high && low ){
+                if (high && low) {
                     Bval = Bval.leftShift(1);
                     lowDigitDifference = Bval.cmp(tenSval);
                 } else {
                     lowDigitDifference = 0L; // this here only for flow analysis!
                 }
-                exactDecimalConversion  = (Bval.cmp( FDBigInteger.ZERO ) == 0);
+                exactDecimalConversion  = Bval.cmp( FDBigInteger.ZERO ) == 0;
             }
             this.decExponent = dozExp+1;
             this.firstDigitIndex = 0;
@@ -740,15 +742,15 @@ public class FloatingDozenal {
             //
             // Last digit gets rounded based on stopping condition.
             //
-            if ( high ){
-                if ( low ){
-                    if ( lowDigitDifference == 0L ){
+            if (high) {
+                if (low) {
+                    if (lowDigitDifference == 0L) {
                         // it's a tie!
                         // choose based on which digits we like.
-                        if ( (digits[firstDigitIndex+nDigits-1]&1) != 0 ) {
+                        if ((digits[firstDigitIndex + nDigits - 1] & 1) != 0) {
                             roundup();
                         }
-                    } else if ( lowDigitDifference > 0 ){
+                    } else if (lowDigitDifference > 0) {
                         roundup();
                     }
                 } else {
@@ -763,7 +765,7 @@ public class FloatingDozenal {
         // is only one digit, e.g. (float)1e-44 seems to do it.
         //
         private void roundup() {
-            int i = (firstDigitIndex + nDigits - 1);
+            int i = firstDigitIndex + nDigits - 1;
             int q = digits[i];
             if (q == Dozenal.DIGIT_PENULTIMATE) {
                 while (q == Dozenal.DIGIT_PENULTIMATE && i > firstDigitIndex) {
@@ -797,7 +799,7 @@ public class FloatingDozenal {
          *    log12(d) ~=~ log12(d2) + binExp * log12(2)
          */
         static int estimateDozExp(long fractBits, int binExp) {
-            double d2 = Double.longBitsToDouble( EXP_ONE | ( fractBits & DoubleConsts.SIGNIF_BIT_MASK ) );
+            double d2 = Double.longBitsToDouble(EXP_ONE | (fractBits & DoubleConsts.SIGNIF_BIT_MASK));
 
             // Original code, which didn't seem to match the explanation above in the first place:
             //double d = (d2-1.5D)*0.289529654D + 0.176091259 + (double)binExp * 0.301029995663981;
@@ -805,23 +807,25 @@ public class FloatingDozenal {
             double d = (d2 - 1.5D) * 0.26828640292D + 0.16317116304D + (double) binExp * 0.27894294565D;
 
             long dBits = Double.doubleToRawLongBits(d);  //can't be NaN here so use raw
-            int exponent = (int)((dBits & DoubleConsts.EXP_BIT_MASK) >> EXP_SHIFT) - DoubleConsts.EXP_BIAS;
+            int exponent = (int) ((dBits & DoubleConsts.EXP_BIT_MASK) >> EXP_SHIFT) - DoubleConsts.EXP_BIAS;
             boolean isNegative = (dBits & DoubleConsts.SIGN_BIT_MASK) != 0; // discover sign
-            if(exponent>=0 && exponent<52) { // hot path
-                long mask   = DoubleConsts.SIGNIF_BIT_MASK >> exponent;
-                int r = (int)(( (dBits&DoubleConsts.SIGNIF_BIT_MASK) | FRACT_HOB )>>(EXP_SHIFT-exponent));
-                return isNegative ? (((mask & dBits) == 0L ) ? -r : -r-1 ) : r;
+            if(exponent >= 0 && exponent < 52) { // hot path
+                long mask = DoubleConsts.SIGNIF_BIT_MASK >> exponent;
+                int r = (int) (((dBits & DoubleConsts.SIGNIF_BIT_MASK) | FRACT_HOB ) >> (EXP_SHIFT-exponent));
+                return isNegative ?
+                        ((mask & dBits) == 0L) ? -r : -r - 1 :
+                        r;
             } else if (exponent < 0) {
-                return (((dBits&~DoubleConsts.SIGN_BIT_MASK) == 0) ? 0 :
-                        ( (isNegative) ? -1 : 0) );
-            } else { //if (exponent >= 52)
-                return (int)d;
+                return ((dBits & ~DoubleConsts.SIGN_BIT_MASK) == 0) ? 0 :
+                       isNegative ? -1 : 0;
+            } else { // if (exponent >= 52)
+                return (int) d;
             }
         }
 
         private static int insignificantDigits(int insignificant) {
             int i;
-            for ( i = 0; insignificant >= Dozenal.RADIX; i++ ) {
+            for (i = 0; insignificant >= Dozenal.RADIX; i++) {
                 insignificant /= Dozenal.RADIX;
             }
             return i;
@@ -834,7 +838,7 @@ public class FloatingDozenal {
          * </pre>
          */
         private static int insignificantDigitsForPow2(int p2) {
-            if(p2>1 && p2 < insignificantDigitsNumber.length) {
+            if(p2 > 1 && p2 < insignificantDigitsNumber.length) {
                 return insignificantDigitsNumber[p2];
             }
             return 0;
@@ -1071,7 +1075,7 @@ public class FloatingDozenal {
                 // will always end up here
                 //
                 if (exp == 0 || dValue == 0.0) {
-                    return (isNegative) ? -dValue : dValue; // small floating integer
+                    return isNegative ? -dValue : dValue; // small floating integer
                 }
                 else if (exp >= 0) {
                     if (exp <= MAX_SMALL_TEN) {
@@ -1080,7 +1084,7 @@ public class FloatingDozenal {
                         // thus one roundoff.
                         //
                         double rValue = dValue * SMALL_RADIX_POW[exp];
-                        return (isNegative) ? -rValue : rValue;
+                        return isNegative ? -rValue : rValue;
                     }
                     int slop = MAX_DOZENAL_DIGITS - kDigits;
                     if (exp <= MAX_SMALL_TEN + slop) {
@@ -1092,7 +1096,7 @@ public class FloatingDozenal {
                         //
                         dValue *= SMALL_RADIX_POW[slop];
                         double rValue = dValue * SMALL_RADIX_POW[exp - slop];
-                        return (isNegative) ? -rValue : rValue;
+                        return isNegative ? -rValue : rValue;
                     }
                     //
                     // Else we have a hard case with a positive exp.
@@ -1103,7 +1107,7 @@ public class FloatingDozenal {
                         // Can get the answer in one division.
                         //
                         double rValue = dValue / SMALL_RADIX_POW[-exp];
-                        return (isNegative) ? -rValue : rValue;
+                        return isNegative ? -rValue : rValue;
                     }
                     //
                     // Else we have a hard case with a negative exp.
@@ -1125,7 +1129,7 @@ public class FloatingDozenal {
                     // Lets face it. This is going to be
                     // Infinity. Cut to the chase.
                     //
-                    return (isNegative) ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
+                    return isNegative ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
                 }
                 if ((exp & 15) != 0) {
                     dValue *= SMALL_RADIX_POW[exp & 15];
@@ -1160,7 +1164,7 @@ public class FloatingDozenal {
                         t = dValue / 2.0;
                         t *= BIG_10_POW[j];
                         if (Double.isInfinite(t)) {
-                            return (isNegative) ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
+                            return isNegative ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
                         }
                         t = Double.MAX_VALUE;
                     }
@@ -1173,7 +1177,7 @@ public class FloatingDozenal {
                     // Lets face it. This is going to be
                     // zero. Cut to the chase.
                     //
-                    return (isNegative) ? -0.0 : 0.0;
+                    return isNegative ? -0.0 : 0.0;
                 }
                 if ((exp & 15) != 0) {
                     dValue /= SMALL_RADIX_POW[exp & 15];
@@ -1208,7 +1212,7 @@ public class FloatingDozenal {
                         t = dValue * 2.0;
                         t *= TINY_10_POW[j];
                         if (t == 0.0) {
-                            return (isNegative) ? -0.0 : 0.0;
+                            return isNegative ? -0.0 : 0.0;
                         }
                         t = Double.MIN_VALUE;
                     }
@@ -1343,7 +1347,7 @@ public class FloatingDozenal {
                     break correctionLoop;
                 }
                 cmpResult = diff.cmpPow62(B5, Ulp2);
-                if ((cmpResult) < 0) {
+                if (cmpResult < 0) {
                     // difference is small.
                     // this is close enough
                     break correctionLoop;
@@ -1412,7 +1416,7 @@ public class FloatingDozenal {
                 // will always end up here.
                 //
                 if (exp == 0 || fValue == 0.0f) {
-                    return (isNegative) ? -fValue : fValue; // small floating integer
+                    return isNegative ? -fValue : fValue; // small floating integer
                 } else if (exp >= 0) {
                     if (exp <= SINGLE_MAX_SMALL_TEN) {
                         //
@@ -1420,7 +1424,7 @@ public class FloatingDozenal {
                         // thus one roundoff.
                         //
                         fValue *= SINGLE_SMALL_10_POW[exp];
-                        return (isNegative) ? -fValue : fValue;
+                        return isNegative ? -fValue : fValue;
                     }
                     int slop = SINGLE_MAX_DECIMAL_DIGITS - kDigits;
                     if (exp <= SINGLE_MAX_SMALL_TEN + slop) {
@@ -1432,7 +1436,7 @@ public class FloatingDozenal {
                         //
                         fValue *= SINGLE_SMALL_10_POW[slop];
                         fValue *= SINGLE_SMALL_10_POW[exp - slop];
-                        return (isNegative) ? -fValue : fValue;
+                        return isNegative ? -fValue : fValue;
                     }
                     //
                     // Else we have a hard case with a positive exp.
@@ -1443,7 +1447,7 @@ public class FloatingDozenal {
                         // Can get the answer in one division.
                         //
                         fValue /= SINGLE_SMALL_10_POW[-exp];
-                        return (isNegative) ? -fValue : fValue;
+                        return isNegative ? -fValue : fValue;
                     }
                     //
                     // Else we have a hard case with a negative exp.
@@ -1461,13 +1465,13 @@ public class FloatingDozenal {
                 //
                 long lValue = (long) iValue;
                 for (int i = kDigits; i < nDigits; i++) {
-                    lValue = lValue * (long)Dozenal.RADIX + (long) (Dozenal.getDigitValue(digits[i]));
+                    lValue = lValue * (long)Dozenal.RADIX + (long) Dozenal.getDigitValue(digits[i]);
                 }
                 double dValue = (double) lValue;
                 exp = decExponent - nDigits;
                 dValue *= SMALL_RADIX_POW[exp];
                 fValue = (float) dValue;
-                return (isNegative) ? -fValue : fValue;
+                return isNegative ? -fValue : fValue;
 
             }
             //
@@ -1486,7 +1490,7 @@ public class FloatingDozenal {
                     // Lets face it. This is going to be
                     // Infinity. Cut to the chase.
                     //
-                    return (isNegative) ? Float.NEGATIVE_INFINITY : Float.POSITIVE_INFINITY;
+                    return isNegative ? Float.NEGATIVE_INFINITY : Float.POSITIVE_INFINITY;
                 }
                 if ((exp & 15) != 0) {
                     dValue *= SMALL_RADIX_POW[exp & 15];
@@ -1506,7 +1510,7 @@ public class FloatingDozenal {
                     // Lets face it. This is going to be
                     // zero. Cut to the chase.
                     //
-                    return (isNegative) ? -0.0f : 0.0f;
+                    return isNegative ? -0.0f : 0.0f;
                 }
                 if ((exp & 15) != 0) {
                     dValue /= SMALL_RADIX_POW[exp & 15];
@@ -1649,7 +1653,7 @@ public class FloatingDozenal {
                     break correctionLoop;
                 }
                 cmpResult = diff.cmpPow62(B5, Ulp2);
-                if ((cmpResult) < 0) {
+                if (cmpResult < 0) {
                     // difference is small.
                     // this is close enough
                     break correctionLoop;
@@ -1841,7 +1845,7 @@ public class FloatingDozenal {
         BinaryToASCIIBuffer buf = getBinaryToASCIIBuffer();
         buf.setSign(isNegative);
         // call the routine that actually does all the hard work.
-        buf.dtoa(binExp, ((long)fractBits)<<(EXP_SHIFT-SINGLE_EXP_SHIFT), nSignificantBits, true);
+        buf.dtoa(binExp, (long) fractBits << (EXP_SHIFT-SINGLE_EXP_SHIFT), nSignificantBits, true);
         return buf;
     }
 
@@ -1962,7 +1966,7 @@ public class FloatingDozenal {
             // answer is zero!
             // Unfortunately, we feel honor-bound to keep parsing!
             //
-            boolean isZero = (nDigits == 0);
+            boolean isZero = nDigits == 0;
             if ( isZero &&  nLeadZero == 0 ){
                 // we saw NO DIGITS AT ALL,
                 // not even a crummy 0!
@@ -2017,7 +2021,7 @@ public class FloatingDozenal {
                     // use: if it would eventually decrease due to a negative
                     // decExp, and that number is below the limit.  We check for
                     // that here.
-                    if (!expOverflow && (expSign == 1 && decExp < 0)
+                    if (!expOverflow && expSign == 1 && decExp < 0
                             && (expVal + decExp) < expLimit) {
                         // Cannot overflow: adding a positive and negative number.
                         decExp += expVal;
@@ -2125,7 +2129,7 @@ public class FloatingDozenal {
             //
             //  Extract significand sign
             String group1 = m.group(1);
-            boolean isNegative = ((group1 != null) && group1.equals("-"));
+            boolean isNegative = (group1 != null) && group1.equals("-");
 
             //  Extract Significand magnitude
             //
@@ -2247,8 +2251,8 @@ public class FloatingDozenal {
                 // exponent     +       +infinity       -infinity
                 //              -       +0.0            -0.0
                 return isNegative ?
-                        (positiveExponent ? A2BC_NEGATIVE_INFINITY : A2BC_NEGATIVE_ZERO)
-                        : (positiveExponent ? A2BC_POSITIVE_INFINITY : A2BC_POSITIVE_ZERO);
+                        positiveExponent ? A2BC_NEGATIVE_INFINITY : A2BC_NEGATIVE_ZERO
+                        : positiveExponent ? A2BC_POSITIVE_INFINITY : A2BC_POSITIVE_ZERO;
 
             }
 
@@ -2327,7 +2331,7 @@ public class FloatingDozenal {
                  i < signifLength && nextShift >= 0;
                  i++) {
                 long currentDigit = getHexDigit(significandString, i);
-                significand |= (currentDigit << nextShift);
+                significand |= currentDigit << nextShift;
                 nextShift -= 4;
             }
 
@@ -2345,21 +2349,21 @@ public class FloatingDozenal {
                     case -1:
                         // three bits need to be copied in; can
                         // set round bit
-                        significand |= ((currentDigit & 0xEL) >> 1);
+                        significand |= (currentDigit & 0xEL) >> 1;
                         round = (currentDigit & 0x1L) != 0L;
                         break;
 
                     case -2:
                         // two bits need to be copied in; can
                         // set round and start sticky
-                        significand |= ((currentDigit & 0xCL) >> 2);
+                        significand |= (currentDigit & 0xCL) >> 2;
                         round = (currentDigit & 0x2L) != 0L;
                         sticky = (currentDigit & 0x1L) != 0;
                         break;
 
                     case -3:
                         // one bit needs to be copied in
-                        significand |= ((currentDigit & 0x8L) >> 3);
+                        significand |= (currentDigit & 0x8L) >> 3;
                         // Now set round and start sticky, if possible
                         round = (currentDigit & 0x4L) != 0L;
                         sticky = (currentDigit & 0x3L) != 0;
@@ -2368,7 +2372,7 @@ public class FloatingDozenal {
                     case -4:
                         // all bits copied into significand; set
                         // round and start sticky
-                        round = ((currentDigit & 0x8L) != 0);  // is top bit set?
+                        round = (currentDigit & 0x8L) != 0;  // is top bit set?
                         // nonzeros in three low order bits?
                         sticky = (currentDigit & 0x7L) != 0;
                         break;
@@ -2407,7 +2411,7 @@ public class FloatingDozenal {
                     if ((iValue & 3) != 1 || floatSticky) {
                         iValue++;
                     }
-                    floatBits |= (((((int) exponent) + (FloatConsts.EXP_BIAS - 1))) << SINGLE_EXP_SHIFT) + (iValue >> 1);
+                    floatBits |= (((int) exponent + (FloatConsts.EXP_BIAS - 1)) << SINGLE_EXP_SHIFT) + (iValue >> 1);
                 }
             } else {
                 if (exponent < FloatConsts.MIN_SUB_EXPONENT - 1) {
@@ -2486,7 +2490,7 @@ public class FloatingDozenal {
                         if (bitsDiscarded > 1) {
                             // create mask to update sticky bits; low
                             // order bitsDiscarded bits should be 1
-                            long mask = ~((~0L) << (bitsDiscarded - 1));
+                            long mask = ~(~0L << (bitsDiscarded - 1));
                             sticky = sticky || ((significand & mask) != 0L);
                         }
 
@@ -2525,15 +2529,14 @@ public class FloatingDozenal {
                 // x1.10        x1. + 1
                 // x1.11        x1. + 1
                 //
-                boolean leastZero = ((significand & 1L) == 0L);
-                if ((leastZero && round && sticky) ||
-                        ((!leastZero) && round)) {
+                boolean leastZero = (significand & 1L) == 0L;
+                if ((leastZero && round && sticky) || (!leastZero && round)) {
                     significand++;
                 }
 
                 double value = isNegative ?
                         Double.longBitsToDouble(significand | DoubleConsts.SIGN_BIT_MASK) :
-                        Double.longBitsToDouble(significand );
+                        Double.longBitsToDouble(significand);
 
                 return new PreparedASCIIToBinaryBuffer(value, fValue);
             }
